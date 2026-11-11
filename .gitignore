@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 rodar_aplicacao.sh
+
+backend/.env
+backend/.env.local
+backend/__pycache__
+backend/.pytest_cache
+firmware/esp32/__pycache__
