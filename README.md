@@ -2,6 +2,13 @@
 
 o projeto serve para monitoramento de um silo, com o uso de ESP32. o ESP32 lê a temperatura, a umidade e a distância até o grão, manda pra uma API em Flask, e um painel em Next.js (TypeScript + React + Next Router) mostra tudo na tela.
 
+### CONSIDERAÇÕES
+
+O projeto foi feito por Francisco Medeiros (front), Mateus de Brito Gomes (back e documentação), Thiago Oliveira Fernandes (back, firmware) e Júlio Cesar Stein (back, firmware e documentação). Quem escreveu o documento fui eu, Francisco, com ajuda da documentação do Thiago
+
+**DECLARAMOS QUE NÃO TEM USO DE I.A. GENERATIVA NESSE PROJETO.**
+**os arquivos gerados automaticamente pelo Next podem parecer isso mas sao gerados assim q vc usa a CLI pra gerar**
+
 ## Como funciona
 
 - **ESP32** (`firmware/esp32`): lê o BME280 (temperatura e umidade) e o sensor ultrassônico (distância), calcula o nível do silo e liga/desliga o ventilador. Liga com 30 °C e desliga com 27 °C. A cada 5 segundos manda os dados pra API.
@@ -104,9 +111,3 @@ pytest
 | GET | `/api/health` | vê se a API tá no ar (health)|
 | GET | `/api/teste-banco` | vê se a API conecta no banco direitinha |
 
-### CONSIDERAÇÕES
-
-O projeto foi feito por Francisco Medeiros (front), Mateus de Brito Gomes (back e documentação), Thiago Oliveira Fernandes (back, firmware) e Júlio Cesar Stein (back, firmware e documentação). Quem escreveu o documento fui eu, Francisco, com ajuda da documentação do Thiago
-
-**DECLARAMOS QUE NÃO TEM USO DE I.A. GENERATIVA NESSE PROJETO.**
-**os arquivos gerados automaticamente pelo Next podem parecer isso mas sao gerados assim q vc usa a CLI pra gerar**
