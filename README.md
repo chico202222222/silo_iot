@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Monitor Silo IoT
 
-## Getting Started
+o projeto serve para monitoramento de um silo, com o uso de ESP32. o ESP32 lê a temperatura, a umidade e a distância até o grão, manda pra uma API em Flask, e um painel em Next.js (TypeScript + React + Next Router) mostra tudo na tela.
 
-First, run the development server:
+## Como funciona
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **ESP32** (`firmware/esp32`): lê o BME280 (temperatura e umidade) e o sensor ultrassônico (distância), calcula o nível do silo e liga/desliga o ventilador. Liga com 30 °C e desliga com 27 °C. A cada 5 segundos manda os dados pra API.
+- **Backend** (`backend`): API em Flask com MySQL. Salva as leituras e gera alertas quando a temperatura passa de 30 °C, a umidade passa de 70% ou o nível fica abaixo de 20%. Tem login com sessão.
+- **Frontend** (`app` e `components`): painel em Next.js com login, cards com as leituras atuais, nível do silo, histórico e alertas. Atualiza sozinho a cada 5 segundos.
+
+## O que precisa ter instalado
+
+- Python 3
+- Node.js
+- MySQL 8
+
+## Como rodar
+
+### Arquivo .env
+
+Crie o arquivo `backend/.env` assim (troque os valores, isso eh um exemplo..):
+
+```
+SECRET_KEY=uma_chave_qualquer_grande_ou_gerada_aleatoriamente
+DB_USER=silo_app
+DB_PASSWORD=sua_senha
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=silo_iot
+ESP32_API_KEY=a_mesma_chave_que_ta_no_esp32
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Banco de dados
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O `rodar_aplicacao.sh` já cria o banco (de teste ne), o usuário do `.env`, as tabelas, o silo 1, o dispositivo 1 e um usuário de teste. Rode da pasta raiz do projeto:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bash rodar_aplicacao.sh
+```
 
-## Learn More
+ele pede a senha do `sudo` p ligar o MySQL
 
-To learn more about Next.js, take a look at the following resources:
+### Backend (porta 5001)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate        # no fish: source .venv/bin/activate.fish
+pip install -r requirements.txt
+python app.py
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+pra ver se subiu: http://localhost:5001/api/health (rota teste)
 
-## Deploy on Vercel
+### Frontend (porta 3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+em outro terminal, na root do projeto:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm install
+npm run dev
+```
+
+abre http://localhost:3000 e entra com:
+(credenciais do db)
+
+se quiser criar outro usuário:
+
+```bash
+cd backend
+python scripts/criar_usuario.py
+```
+
+### ESP32
+
+Coloque os arquivos de `firmware/esp32` no ESP32 (eu usei MicroPython) e crie um `config_esp32.py` com o endereço da API e a chave:
+
+```python
+API_URL = "http://ip:5001/api/leituras"
+API_KEY = "a_mesma_chave_do_ESP32_API_KEY"
+```
+
+O ESP32 manda as leituras com `dispositivo_id = 1`, que o script do banco já cria.
+
+## Testes
+
+```bash
+cd backend
+source .venv/bin/activate
+pytest
+```
+
+## Rotas da API
+
+| método | rota | o que faz?|
+|---|---|---|
+| POST | `/api/leituras` | ESP32 manda uma leitura (precisa da chave configurada) |
+| GET | `/api/leituras/atual` | última leitura |
+| GET | `/api/leituras/historico` | histórico de leituras |
+| GET | `/api/eventos` | alertas gerados |
+| POST | `/api/auth/login` | login |
+| POST | `/api/auth/logout` | logout |
+| GET | `/api/auth/sessao` | vê se tá logado |
+| GET | `/api/health` | vê se a API tá no ar (health)|
+| GET | `/api/teste-banco` | vê se a API conecta no banco direitinha |
+
+### CONSIDERAÇÕES
+
+O projeto foi feito por Francisco Medeiros (front), Mateus de Brito Gomes (back e documentação), Thiago Oliveira Fernandes (back, firmware) e Júlio Cesar Stein (back, firmware e documentação). Quem escreveu o documento fui eu, Francisco, com ajuda da documentação do Thiago
+
+**DECLARAMOS QUE NÃO TEM USO DE I.A. GENERATIVA NESSE PROJETO.**
+**os arquivos gerados automaticamente pelo Next podem parecer isso mas sao gerados assim q vc usa a CLI pra gerar**
